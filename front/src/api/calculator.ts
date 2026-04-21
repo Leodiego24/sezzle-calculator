@@ -4,9 +4,6 @@ import type {
   CalculateResponse,
 } from '../types/calculator';
 
-/**
- * Calls POST /api/v1/calculate on the backend and returns the parsed response.
- */
 export function calculate(
   req: CalculateRequest,
 ): Promise<CalculateResponse> {

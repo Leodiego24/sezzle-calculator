@@ -31,7 +31,8 @@ type Action =
   | { type: 'EQUALS_START' }
   | { type: 'EQUALS_SUCCESS'; result: number }
   | { type: 'EQUALS_ERROR'; message: string }
-  | { type: 'CHAIN_SUCCESS'; result: number; operation: Operation };
+  | { type: 'CHAIN_SUCCESS'; result: number; operation: Operation }
+  | { type: 'UNARY_SUCCESS'; result: number };
 
 export function reducer(
   state: CalculatorState,
@@ -103,7 +104,7 @@ export function reducer(
         ...state,
         pendingOperand: Number.isFinite(currentValue) ? currentValue : 0,
         pendingOperation: action.operation,
-        justEvaluated: true, // next digit replaces the display
+        justEvaluated: true,
         error: null,
       };
     }
@@ -142,6 +143,15 @@ export function reducer(
         error: null,
       };
 
+    case 'UNARY_SUCCESS':
+      return {
+        ...state,
+        display: formatNumber(action.result),
+        justEvaluated: true,
+        isLoading: false,
+        error: null,
+      };
+
     default:
       return state;
   }
@@ -154,6 +164,7 @@ export interface CalculatorActions {
   pressBackspace: () => void;
   pressOperator: (operation: Operation) => Promise<void>;
   pressEquals: () => Promise<void>;
+  pressSqrt: () => Promise<void>;
   clear: () => void;
 }
 
@@ -165,7 +176,6 @@ export interface UseCalculatorResult {
 export function useCalculator(): UseCalculatorResult {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Ref mirror so async callbacks read the latest state.
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -195,9 +205,6 @@ export function useCalculator(): UseCalculatorResult {
   const pressOperator = useCallback(async (operation: Operation) => {
     const current = stateRef.current;
 
-    // Chain: a prior operation is already pending AND the user typed a fresh
-    // second operand (justEvaluated=false). Evaluate it first, then stage the
-    // new operator on top of the intermediate result.
     const shouldChain =
       current.pendingOperation !== null &&
       current.pendingOperand !== null &&
@@ -280,6 +287,34 @@ export function useCalculator(): UseCalculatorResult {
     }
   }, []);
 
+  const pressSqrt = useCallback(async () => {
+    const current = stateRef.current;
+    const x = Number.parseFloat(current.display);
+    if (!Number.isFinite(x)) {
+      dispatch({
+        type: 'EQUALS_ERROR',
+        message: 'Current value is not a valid number.',
+      });
+      return;
+    }
+
+    dispatch({ type: 'EQUALS_START' });
+
+    try {
+      const response = await calculate({ operation: 'sqrt', operands: [x] });
+      dispatch({ type: 'UNARY_SUCCESS', result: response.result });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        dispatch({ type: 'EQUALS_ERROR', message: err.payload.message });
+      } else {
+        dispatch({
+          type: 'EQUALS_ERROR',
+          message: 'Could not reach the calculator service.',
+        });
+      }
+    }
+  }, []);
+
   return {
     state,
     actions: {
@@ -290,6 +325,7 @@ export function useCalculator(): UseCalculatorResult {
       clear,
       pressOperator,
       pressEquals,
+      pressSqrt,
     },
   };
 }

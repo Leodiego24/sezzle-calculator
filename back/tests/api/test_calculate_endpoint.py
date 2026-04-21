@@ -1,5 +1,3 @@
-"""API-level tests for `POST /api/v1/calculate`."""
-
 from __future__ import annotations
 
 import pytest
@@ -15,6 +13,9 @@ ENDPOINT = "/api/v1/calculate"
         ("subtract", [10, 4], 6.0),
         ("multiply", [6, 7], 42.0),
         ("divide", [20, 4], 5.0),
+        ("power", [2, 10], 1024.0),
+        ("sqrt", [9], 3.0),
+        ("percentage", [200, 10], 20.0),
     ],
 )
 async def test_happy_path_for_each_operation(
@@ -30,7 +31,7 @@ async def test_happy_path_for_each_operation(
     assert response.status_code == 200
     body = response.json()
     assert body["operation"] == operation
-    assert body["operands"] == [float(operands[0]), float(operands[1])]
+    assert body["operands"] == [float(x) for x in operands]
     assert body["result"] == expected
 
 
@@ -49,7 +50,7 @@ async def test_division_by_zero_returns_400(client: AsyncClient) -> None:
 async def test_unknown_operation_returns_422(client: AsyncClient) -> None:
     response = await client.post(
         ENDPOINT,
-        json={"operation": "power", "operands": [2, 3]},
+        json={"operation": "modulo", "operands": [2, 3]},
     )
     assert response.status_code == 422
     body = response.json()
@@ -82,15 +83,53 @@ async def test_missing_operation_returns_422(client: AsyncClient) -> None:
     assert body["error"] == "validation_error"
 
 
-@pytest.mark.parametrize("operands", [[1], [1, 2, 3]])
-async def test_wrong_arity_returns_422(client: AsyncClient, operands: list[float]) -> None:
+@pytest.mark.parametrize(
+    ("operation", "operands"),
+    [
+        ("add", [1]),
+        ("add", [1, 2, 3]),
+        ("sqrt", [4, 9]),
+        ("sqrt", []),
+        ("power", [2]),
+        ("percentage", [100]),
+    ],
+)
+async def test_wrong_arity_returns_422(
+    client: AsyncClient, operation: str, operands: list[float]
+) -> None:
     response = await client.post(
         ENDPOINT,
-        json={"operation": "add", "operands": operands},
+        json={"operation": operation, "operands": operands},
     )
     assert response.status_code == 422
     body = response.json()
     assert body["error"] == "validation_error"
+
+
+@pytest.mark.parametrize(
+    ("operation", "operands", "message_fragment"),
+    [
+        ("sqrt", [-1], "negative"),
+        ("power", [0, -1], "negative power"),
+        ("power", [-2, 0.5], "fractional"),
+        ("power", [10, 1000], "too large"),
+    ],
+)
+async def test_invalid_operand_returns_400(
+    client: AsyncClient,
+    operation: str,
+    operands: list[float],
+    message_fragment: str,
+) -> None:
+    response = await client.post(
+        ENDPOINT,
+        json={"operation": operation, "operands": operands},
+    )
+    assert response.status_code == 400
+    body = response.json()
+    assert body["error"] == "invalid_operand"
+    assert message_fragment in body["message"].lower()
+    assert body["details"] is None
 
 
 async def test_malformed_json_returns_422(client: AsyncClient) -> None:
@@ -120,7 +159,6 @@ async def test_cors_preflight_from_vite_origin(client: AsyncClient) -> None:
 
 
 async def test_unexpected_error_returns_500(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Force an exception in the service to verify the catch-all handler."""
     from app.api.v1 import calculator as controller
 
     def boom(*_args: object, **_kwargs: object) -> float:

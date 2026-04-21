@@ -1,8 +1,5 @@
 import { ApiError, type ApiErrorPayload } from '../types/calculator';
 
-/**
- * Resolve the backend base URL from Vite env, falling back to localhost.
- */
 export function getApiBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_API_URL;
   if (typeof fromEnv === 'string' && fromEnv.length > 0) {
@@ -11,13 +8,6 @@ export function getApiBaseUrl(): string {
   return 'http://localhost:8000';
 }
 
-/**
- * Minimal fetch wrapper that:
- *   - Prepends the configured base URL.
- *   - Sends/receives JSON.
- *   - Throws ApiError on non-2xx responses that return a JSON error body.
- *   - Throws a generic Error on network failures.
- */
 export async function request<TResponse>(
   path: string,
   init: RequestInit = {},

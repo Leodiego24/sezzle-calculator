@@ -1,25 +1,32 @@
-"""Request and response schemas for the calculator endpoint."""
-
 from __future__ import annotations
 
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Operation(str, Enum):
-    """Supported arithmetic operations."""
-
     ADD = "add"
     SUBTRACT = "subtract"
     MULTIPLY = "multiply"
     DIVIDE = "divide"
+    POWER = "power"
+    SQRT = "sqrt"
+    PERCENTAGE = "percentage"
+
+OPERATION_ARITY: dict[Operation, int] = {
+    Operation.ADD: 2,
+    Operation.SUBTRACT: 2,
+    Operation.MULTIPLY: 2,
+    Operation.DIVIDE: 2,
+    Operation.POWER: 2,
+    Operation.SQRT: 1,
+    Operation.PERCENTAGE: 2,
+}
 
 
 class CalculateRequest(BaseModel):
-    """Incoming payload for the `/calculate` endpoint."""
-
     model_config = ConfigDict(extra="forbid")
 
     operation: Operation = Field(
@@ -28,23 +35,30 @@ class CalculateRequest(BaseModel):
     )
     operands: list[float] = Field(
         ...,
-        min_length=2,
+        min_length=1,
         max_length=2,
-        description="Exactly two numeric operands (left, right).",
+        description="One or two numeric operands (arity depends on operation).",
     )
+
+    @model_validator(mode="after")
+    def _check_arity(self) -> "CalculateRequest":
+        expected = OPERATION_ARITY[self.operation]
+        if len(self.operands) != expected:
+            raise ValueError(
+                f"Operation '{self.operation.value}' requires exactly "
+                f"{expected} operand{'s' if expected != 1 else ''}, "
+                f"got {len(self.operands)}."
+            )
+        return self
 
 
 class CalculateResponse(BaseModel):
-    """Successful response echoing the request plus the computed result."""
-
     operation: Operation
     operands: list[float]
     result: float
 
 
 class ErrorResponse(BaseModel):
-    """Uniform error body returned by every non-2xx response."""
-
     error: str = Field(
         ...,
         description="Machine-readable error code (e.g. 'division_by_zero').",

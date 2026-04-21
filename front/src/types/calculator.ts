@@ -1,17 +1,22 @@
-/**
- * Types mirroring the backend API contract for the calculator service.
- */
+export type Operation =
+  | 'add'
+  | 'subtract'
+  | 'multiply'
+  | 'divide'
+  | 'power'
+  | 'sqrt'
+  | 'percentage';
 
-export type Operation = 'add' | 'subtract' | 'multiply' | 'divide';
+export type Operands = [number] | [number, number];
 
 export interface CalculateRequest {
   operation: Operation;
-  operands: [number, number];
+  operands: Operands;
 }
 
 export interface CalculateResponse {
   operation: Operation;
-  operands: [number, number];
+  operands: Operands;
   result: number;
 }
 
@@ -21,10 +26,6 @@ export interface ApiErrorPayload {
   details?: Record<string, unknown> | null;
 }
 
-/**
- * Error thrown by the API client when the server returns a non-2xx response
- * with a parseable error body.
- */
 export class ApiError extends Error {
   public status: number;
   public payload: ApiErrorPayload;

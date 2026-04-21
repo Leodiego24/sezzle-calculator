@@ -9,6 +9,7 @@ export interface KeypadProps {
   onDecimal: () => void;
   onSign: () => void;
   onBackspace: () => void;
+  onSqrt: () => void;
   disabled: boolean;
 }
 
@@ -19,7 +20,14 @@ type Key =
   | { label: string; kind: 'clear' }
   | { label: string; kind: 'decimal' }
   | { label: string; kind: 'sign' }
-  | { label: string; kind: 'backspace' };
+  | { label: string; kind: 'backspace' }
+  | { label: string; kind: 'sqrt' };
+
+const ADVANCED_KEYS: Key[] = [
+  { label: '√', kind: 'sqrt' },
+  { label: 'xʸ', kind: 'operator', op: 'power' },
+  { label: '%', kind: 'operator', op: 'percentage' },
+];
 
 const KEYS: Key[] = [
   { label: 'AC', kind: 'clear' },
@@ -63,6 +71,8 @@ function ariaLabelFor(key: Key): string {
       return 'Toggle sign';
     case 'backspace':
       return 'Backspace';
+    case 'sqrt':
+      return 'Square root';
   }
 }
 
@@ -83,6 +93,8 @@ function classFor(key: Key): string {
       return `${base} ${styles.utility}`;
     case 'backspace':
       return `${base} ${styles.utility}`;
+    case 'sqrt':
+      return `${base} ${styles.operator}`;
   }
 }
 
@@ -94,6 +106,7 @@ export function Keypad({
   onDecimal,
   onSign,
   onBackspace,
+  onSqrt,
   disabled,
 }: KeypadProps) {
   const handleClick = (key: Key) => {
@@ -119,24 +132,30 @@ export function Keypad({
       case 'backspace':
         onBackspace();
         return;
+      case 'sqrt':
+        onSqrt();
+        return;
     }
   };
 
+  const renderButton = (key: Key) => (
+    <button
+      key={key.label + key.kind + ('v' in key ? key.v : '')}
+      type="button"
+      className={classFor(key)}
+      onClick={() => handleClick(key)}
+      disabled={disabled}
+      aria-label={ariaLabelFor(key)}
+      data-kind={key.kind}
+    >
+      {key.label}
+    </button>
+  );
+
   return (
-    <div className={styles.keypad} role="group" aria-label="Keypad">
-      {KEYS.map((key) => (
-        <button
-          key={key.label + key.kind + ('v' in key ? key.v : '')}
-          type="button"
-          className={classFor(key)}
-          onClick={() => handleClick(key)}
-          disabled={disabled}
-          aria-label={ariaLabelFor(key)}
-          data-kind={key.kind}
-        >
-          {key.label}
-        </button>
-      ))}
+    <div role="group" aria-label="Keypad">
+      <div className={styles.advanced}>{ADVANCED_KEYS.map(renderButton)}</div>
+      <div className={styles.keypad}>{KEYS.map(renderButton)}</div>
     </div>
   );
 }

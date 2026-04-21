@@ -1,5 +1,3 @@
-"""Aggregator for all v1 routes."""
-
 from __future__ import annotations
 
 from fastapi import APIRouter

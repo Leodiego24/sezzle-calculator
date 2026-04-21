@@ -32,6 +32,7 @@ export function Calculator() {
           onDecimal={actions.pressDecimal}
           onSign={actions.pressSign}
           onBackspace={actions.pressBackspace}
+          onSqrt={actions.pressSqrt}
           disabled={state.isLoading}
         />
       </main>

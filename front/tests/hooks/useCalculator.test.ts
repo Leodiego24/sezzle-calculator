@@ -44,14 +44,12 @@ describe('useCalculator', () => {
     act(() => result.current.actions.pressDecimal());
     expect(result.current.state.display).toBe('3.');
 
-    // Second press is a no-op.
     act(() => result.current.actions.pressDecimal());
     expect(result.current.state.display).toBe('3.');
   });
 
   it('pressDecimal after evaluation starts "0."', async () => {
     const { result } = renderHook(() => useCalculator());
-    // Fake justEvaluated by running a calc.
     mockedCalculate.mockResolvedValueOnce({
       operation: 'add',
       operands: [1, 1],
@@ -205,7 +203,6 @@ describe('useCalculator', () => {
   });
 
   it('chains operations: pressing an operator with a pending one evaluates first', async () => {
-    // 2 + 2 + 2 should: (1) compute 2+2=4 on the second "+", (2) compute 4+2=6 on "=".
     mockedCalculate
       .mockResolvedValueOnce({ operation: 'add', operands: [2, 2], result: 4 })
       .mockResolvedValueOnce({ operation: 'add', operands: [4, 2], result: 6 });
@@ -218,7 +215,6 @@ describe('useCalculator', () => {
     });
     act(() => result.current.actions.pressDigit('2'));
 
-    // Second "+" triggers the chained evaluation of 2+2.
     await act(async () => {
       await result.current.actions.pressOperator('add');
     });
@@ -281,6 +277,94 @@ describe('useCalculator', () => {
       expect(result.current.state.error).toBe('Cannot divide by zero'),
     );
     expect(result.current.state.isLoading).toBe(false);
+  });
+
+  it('pressSqrt calls the API with the current display and updates the result', async () => {
+    mockedCalculate.mockResolvedValueOnce({
+      operation: 'sqrt',
+      operands: [9],
+      result: 3,
+    });
+
+    const { result } = renderHook(() => useCalculator());
+    act(() => result.current.actions.pressDigit('9'));
+
+    await act(async () => {
+      await result.current.actions.pressSqrt();
+    });
+
+    expect(mockedCalculate).toHaveBeenCalledWith({
+      operation: 'sqrt',
+      operands: [9],
+    });
+    expect(result.current.state.display).toBe('3');
+    expect(result.current.state.justEvaluated).toBe(true);
+    expect(result.current.state.isLoading).toBe(false);
+  });
+
+  it('pressSqrt surfaces ApiError messages for invalid operand', async () => {
+    mockedCalculate.mockRejectedValueOnce(
+      new ApiError(400, {
+        error: 'invalid_operand',
+        message: 'Cannot take the square root of a negative number.',
+        details: null,
+      }),
+    );
+
+    const { result } = renderHook(() => useCalculator());
+    act(() => result.current.actions.pressDigit('1'));
+    act(() => result.current.actions.pressSign());
+
+    await act(async () => {
+      await result.current.actions.pressSqrt();
+    });
+
+    await waitFor(() =>
+      expect(result.current.state.error).toBe(
+        'Cannot take the square root of a negative number.',
+      ),
+    );
+  });
+
+  it('pressSqrt surfaces a generic error on network failure', async () => {
+    mockedCalculate.mockRejectedValueOnce(new Error('boom'));
+
+    const { result } = renderHook(() => useCalculator());
+    act(() => result.current.actions.pressDigit('4'));
+
+    await act(async () => {
+      await result.current.actions.pressSqrt();
+    });
+
+    await waitFor(() =>
+      expect(result.current.state.error).toBe(
+        'Could not reach the calculator service.',
+      ),
+    );
+  });
+
+  it('chains power and percentage through the standard operator flow', async () => {
+    mockedCalculate.mockResolvedValueOnce({
+      operation: 'power',
+      operands: [2, 3],
+      result: 8,
+    });
+
+    const { result } = renderHook(() => useCalculator());
+    act(() => result.current.actions.pressDigit('2'));
+    await act(async () => {
+      await result.current.actions.pressOperator('power');
+    });
+    act(() => result.current.actions.pressDigit('3'));
+    await act(async () => {
+      await result.current.actions.pressEquals();
+    });
+
+    expect(mockedCalculate).toHaveBeenCalledWith({
+      operation: 'power',
+      operands: [2, 3],
+    });
+    expect(result.current.state.display).toBe('8');
   });
 
   it('typing a digit after evaluation replaces the display', async () => {

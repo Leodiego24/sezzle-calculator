@@ -1,5 +1,3 @@
-"""FastAPI application factory and ASGI entrypoint."""
-
 from __future__ import annotations
 
 from fastapi import FastAPI
@@ -11,11 +9,6 @@ from app.handlers.errors import register_exception_handlers
 
 
 def create_app() -> FastAPI:
-    """Build a fresh FastAPI application.
-
-    A factory is used (rather than a module-level singleton) so tests can
-    construct isolated instances without leaking state between test cases.
-    """
     settings = get_settings()
 
     app = FastAPI(
@@ -41,5 +34,4 @@ def create_app() -> FastAPI:
     return app
 
 
-# Module-level instance for `uvicorn app.main:app`.
 app = create_app()

@@ -12,6 +12,7 @@ function setup(overrides: Partial<Parameters<typeof Keypad>[0]> = {}) {
     onDecimal: vi.fn(),
     onSign: vi.fn(),
     onBackspace: vi.fn(),
+    onSqrt: vi.fn(),
     disabled: false,
     ...overrides,
   };
@@ -43,6 +44,19 @@ describe('<Keypad />', () => {
 
     await user.click(screen.getByRole('button', { name: 'divide' }));
     expect(props.onOperator).toHaveBeenCalledWith('divide');
+
+    await user.click(screen.getByRole('button', { name: 'power' }));
+    expect(props.onOperator).toHaveBeenCalledWith('power');
+
+    await user.click(screen.getByRole('button', { name: 'percentage' }));
+    expect(props.onOperator).toHaveBeenCalledWith('percentage');
+  });
+
+  it('calls onSqrt when the square root button is pressed', async () => {
+    const user = userEvent.setup();
+    const props = setup();
+    await user.click(screen.getByRole('button', { name: 'Square root' }));
+    expect(props.onSqrt).toHaveBeenCalledTimes(1);
   });
 
   it('calls onEquals when equals is pressed', async () => {
@@ -87,7 +101,6 @@ describe('<Keypad />', () => {
     for (const button of buttons) {
       expect(button).toBeDisabled();
     }
-    // Equals is still rendered.
     expect(
       screen.getByRole('button', { name: 'Equals' }),
     ).toBeInTheDocument();

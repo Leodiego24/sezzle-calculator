@@ -1,10 +1,3 @@
-"""`POST /calculate` controller.
-
-The controller is intentionally thin: validate input (Pydantic), invoke the
-service, and return a response model. Errors bubble up to the registered
-exception handlers.
-"""
-
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -26,7 +19,6 @@ router = APIRouter()
     summary="Compute an arithmetic operation between two operands.",
 )
 async def calculate(payload: CalculateRequest) -> CalculateResponse:
-    """Execute the requested operation and echo the inputs in the response."""
     result = compute(payload.operation, payload.operands)
     return CalculateResponse(
         operation=payload.operation,
