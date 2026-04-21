@@ -162,17 +162,3 @@ For one screen of UI, Tailwind is a dependency, a config file, and a toolchain t
 Every non-2xx response — domain error, validation error, or unexpected crash — returns the same `{ error, message, details }` shape. The frontend has a single error branch, tested once.
 
 ---
-
-## Out of scope (intentional)
-
-Signals of discipline, not omission:
-
-- Calculation history, undo, or persistence
-- Authentication / user accounts / sessions
-- Databases — the service is stateless
-- Chained expressions with operator precedence (two operands per request)
-- Optional operations from the brief (exponentiation, square root, percentage)
-- Internationalization, dark mode, keyboard shortcuts beyond native button focus
-- CI pipeline — adding GitHub Actions was a stretch goal not pursued
-
----
