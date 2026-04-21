@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./back
+    container_name: sezzle-calculator-backend
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./front
+      args:
+        VITE_API_URL: "http://localhost:8000"
+    container_name: sezzle-calculator-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy

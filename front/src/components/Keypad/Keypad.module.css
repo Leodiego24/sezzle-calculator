@@ -1,0 +1,80 @@
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.key {
+  min-height: 56px;
+  min-width: 44px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.12s ease, transform 0.05s ease;
+  user-select: none;
+}
+
+.key:active {
+  transform: translateY(1px);
+}
+
+.key:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.digit {
+  background: var(--color-digit);
+  color: var(--color-text);
+}
+
+.digit:hover:not(:disabled) {
+  background: var(--color-digit-hover);
+}
+
+.operator {
+  background: var(--color-operator);
+  color: var(--color-text-inverse);
+  border-color: transparent;
+}
+
+.operator:hover:not(:disabled) {
+  background: var(--color-operator-hover);
+}
+
+.equals {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: transparent;
+}
+
+.equals:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.utility {
+  background: var(--color-utility);
+  color: var(--color-text);
+}
+
+.utility:hover:not(:disabled) {
+  background: var(--color-utility-hover);
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+@media (min-width: 640px) {
+  .key {
+    min-height: 64px;
+    font-size: 1.25rem;
+  }
+
+  .keypad {
+    gap: var(--space-3);
+  }
+}

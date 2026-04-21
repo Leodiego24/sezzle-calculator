@@ -1,0 +1,31 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual envs and caches
+.venv/
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Tests and dev-only files (the image runs with --no-dev anyway)
+tests/
+.git/
+.gitignore
+.github/
+
+# Editor/OS cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Docker itself
+Dockerfile
+.dockerignore
