@@ -176,14 +176,3 @@ Signals of discipline, not omission:
 - CI pipeline — adding GitHub Actions was a stretch goal not pursued
 
 ---
-
-## AI tooling disclosure
-
-This project was built with Claude Code (Anthropic's CLI agent). Prompts used:
-
-1. **Initial framing** — the full Sezzle brief pasted into the chat with the constraint: *"Build a full-stack calculator, Python + FastAPI for the backend, React + TypeScript for the frontend, separate `back/` and `front/` folders, as clean and scalable as possible."*
-2. **Scope clarification** — explicit answers that shaped the plan: only the 4 basic operations; `docker-compose` full-stack; native `float` over `Decimal` for simplicity; READMEs in English.
-3. **Parallel implementation** — after plan approval, two background agents were dispatched concurrently with a binding API contract: one built `back/`, the other built `front/`. Both were bounded to their folder and told not to touch each other's code. They converged on the same JSON contract without coordination.
-4. **Root orchestration** — the top-level README, `docker-compose.yml`, `.gitignore`, and `.editorconfig` were written by the main agent while the two workers ran.
-
-The conversation language was Spanish; every artifact in this repo is English by explicit request.
