@@ -2,7 +2,6 @@
 name = "sezzle-calculator-back"
 version = "0.1.0"
 description = "Backend API for the Sezzle calculator take-home challenge."
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.0",
@@ -33,15 +32,7 @@ line-length = 100
 target-version = "py313"
 
 [tool.ruff.lint]
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "UP",  # pyupgrade
-    "N",   # pep8-naming
-]
+select = ["E", "W", "F", "I", "B", "UP", "N"]
 
 [tool.pytest.ini_options]
 addopts = "--cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=90"
